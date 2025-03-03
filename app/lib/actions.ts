@@ -90,3 +90,26 @@ export async function updateInvoice(id: string, formData: FormData) {
         await connection.end();
     }
 }
+
+
+export async function deleteInvoice(id: string) {
+    const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+    });
+
+    try {
+        await connection.execute(
+            'DELETE FROM invoices WHERE id = ?',
+            [id]
+        );
+        // Since this action is being called in the /dashboard/invoices path, 
+        // you don't need to call redirect. Calling revalidatePath will trigger 
+        // a new server request and re-render the table
+        revalidatePath('/dashboard/invoices');
+    } finally {
+        await connection.end();
+    }
+}
