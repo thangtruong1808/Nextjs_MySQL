@@ -24,32 +24,53 @@ async function getUser(email: string): Promise<User | undefined> {
       const [rows] = await pool.query<UserRow[]>('SELECT * FROM users WHERE email = ?', [email]);
       return rows[0];
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      throw new Error('Failed to fetch user.');
+      return undefined;
     }
 }
   
 export const { auth, signIn, signOut } = NextAuth({
-  ...authConfig,
+    ...authConfig,
+    debug: false, // Disable verbose logging
   providers: [
     Credentials({
       async authorize(credentials) {
-        const parsedCredentials = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
-          .safeParse(credentials);
+        try {
+          const parsedCredentials = z
+            .object({ email: z.string().email(), password: z.string().min(6) })
+            .safeParse(credentials);
 
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
-          if (!user) return null;
-          const passwordsMatch = await bcrypt.compare(password, user.password);
+          if (parsedCredentials.success) {
+            const { email, password } = parsedCredentials.data;
+            const user = await getUser(email);
+            if (!user) return null;
+            const passwordsMatch = await bcrypt.compare(password, user.password);
 
-          if (passwordsMatch) return user;
+            if (passwordsMatch) return user;
+          }
+          return null;
+        } catch (error) {
+          return null;
         }
-
-        console.log('Invalid credentials');
-        return null;
       },
     }),
-  ],
+    ],
+  // Custom logger to control what gets logged
+  logger: {
+    error(error) {
+        // Check if the error message contains credential-related text
+        const errorString = String(error);
+        if (!errorString.includes('credentials') && !errorString.includes('signin')) {
+          console.error(`[auth] Error:`, error);
+        }
+      },
+    warn(code: string) {
+      // Only log critical warnings
+      if (code !== 'JWT_SESSION_ERROR') {
+        console.warn(`[auth] Warning: ${code}`);
+      }
+    },
+    debug(code?: string) {
+      // Don't log any debug messages
+    },
+  }
 });
