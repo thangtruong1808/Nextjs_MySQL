@@ -1,5 +1,4 @@
-import mysql from 'mysql2/promise';
-import { RowDataPacket, OkPacket, ResultSetHeader } from 'mysql2/promise';
+import mysql, { RowDataPacket } from 'mysql2/promise';
 
 
 import {
