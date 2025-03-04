@@ -6,6 +6,8 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+   // Add darkMode configuration to use class strategy
+   darkMode: 'class',
   theme: {
     extend: {
       gridTemplateColumns: {
